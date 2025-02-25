@@ -38,6 +38,7 @@ def main():
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("good", good))
     dispatcher.add_handler(CommandHandler("bad", bad))
+    dispatcher.add_handler(CommandHandler("hello", hello))
 
     # To start the bot:
     updater.start_polling()
@@ -100,6 +101,20 @@ def bad(update: Update, context: CallbackContext) -> None:
         update.message.reply_text(f'Bad "{keyword}" x {count} times.')
     except IndexError:
         update.message.reply_text('Usage: /bad <keyword>')
+    except redis.RedisError as e:
+        logging.error(f"Redis error: {e}")
+        update.message.reply_text('An error occurred while accessing Redis.')
+
+def hello(update: Update, context: CallbackContext) -> None:
+    """Send a message when the command /hello is issued."""
+    try:
+        global redis1
+        keyword = context.args[0]
+        redis1.incr(keyword)
+        count = redis1.get(keyword)  # This is already a string
+        update.message.reply_text(f'Good Day, {keyword}!')
+    except IndexError:
+        update.message.reply_text('Usage: /hello <keyword>')
     except redis.RedisError as e:
         logging.error(f"Redis error: {e}")
         update.message.reply_text('An error occurred while accessing Redis.')
